@@ -1,1 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor 3D - Proyecto</title>
+    <style>
+        /* Quitamos márgenes y hacemos que ocupe toda la pantalla */
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            height: 100%; 
+            overflow: hidden; 
+            font-family: Arial, sans-serif; 
+            background-color: #000;
+        }
+        
+        /* Contenedor de los iframes */
+        .iframe-container { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+        }
+        
+        /* Ocultamos el piso 2 al cargar la página */
+        #piso2 { 
+            display: none; 
+        }
 
+        /* Estilos de los botones flotantes */
+        .controles {
+            position: absolute;
+            bottom: 30px; /* Separación desde abajo */
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 50px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover { background-color: #1d4ed8; }
+        
+        /* Estilo para el botón desactivado (el piso actual) */
+        button:disabled { background-color: #94a3b8; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <!-- Iframe del Primer Piso -->
+    <iframe id="piso1" class="iframe-container" src="https://floorplanner.com/360vr/164687602-1788900004" allowfullscreen></iframe>
+    
+    <!-- Iframe del Segundo Piso (Cuando tengas el link, colócalo en vez de about:blank) -->
+    <iframe id="piso2" class="iframe-container" src="about:blank" allowfullscreen></iframe>
+
+    <!-- Panel de Botones -->
+    <div class="controles">
+        <button id="btn-bajar" disabled onclick="cambiarPiso(1)">Piso 1</button>
+        <button id="btn-subir" onclick="cambiarPiso(2)">Piso 2</button>
+    </div>
+
+    <script>
+        function cambiarPiso(piso) {
+            const iframe1 = document.getElementById('piso1');
+            const iframe2 = document.getElementById('piso2');
+            const btnBajar = document.getElementById('btn-bajar');
+            const btnSubir = document.getElementById('btn-subir');
+
+            if (piso === 1) {
+                iframe1.style.display = 'block';
+                iframe2.style.display = 'none';
+                btnBajar.disabled = true;
+                btnSubir.disabled = false;
+            } else {
+                iframe1.style.display = 'none';
+                iframe2.style.display = 'block';
+                btnBajar.disabled = false;
+                btnSubir.disabled = true;
+            }
+        }
+    </script>
+</body>
+</html>
