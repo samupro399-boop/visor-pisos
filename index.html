@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visor 3D - Proyecto</title>
     <style>
-        /* Quitamos márgenes y hacemos que ocupe toda la pantalla */
+        /* Ocupar toda la pantalla y quitar barras de desplazamiento */
         body, html { 
             margin: 0; 
             padding: 0; 
@@ -15,7 +15,7 @@
             background-color: #000;
         }
         
-        /* Contenedor de los iframes */
+        /* Contenedor base de los iframes */
         .iframe-container { 
             position: absolute; 
             top: 0; 
@@ -23,48 +23,73 @@
             width: 100%; 
             height: 100%; 
             border: none; 
+            display: none; /* Ocultos por defecto */
         }
         
-        /* Ocultamos el piso 2 al cargar la página */
-        #piso2 { 
-            display: none; 
-        }
+        /* Mostrar solo el piso 1 al cargar */
+        #piso1 { display: block; }
 
-        /* Estilos de los botones flotantes */
+        /* --- CONTROLES: ESTILO MÓVIL (Por defecto) --- */
         .controles {
             position: absolute;
-            bottom: 30px; /* Separación desde abajo */
+            bottom: 30px; 
             left: 50%;
             transform: translateX(-50%);
             display: flex;
+            align-items: center;
             gap: 15px;
             z-index: 10;
             background: rgba(255, 255, 255, 0.9);
-            padding: 15px 25px;
+            padding: 10px 20px;
             border-radius: 50px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+        }
+
+        /* --- CONTROLES: ESTILO PC (Pantallas más anchas) --- */
+        @media (min-width: 768px) {
+            .controles {
+                bottom: auto;
+                top: 50%;
+                left: auto;
+                right: 30px;
+                transform: translateY(-50%);
+                flex-direction: column; /* Flechas apiladas verticalmente */
+                padding: 20px 10px;
+            }
         }
 
         button {
             background-color: #2563eb;
             color: white;
             border: none;
-            padding: 12px 24px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 30px;
+            width: 45px;
+            height: 45px;
+            font-size: 20px;
+            border-radius: 50%; /* Botones redondos */
             cursor: pointer;
             transition: background 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         button:hover { 
             background-color: #1d4ed8; 
         }
         
-        /* Estilo para el botón desactivado (el piso actual) */
         button:disabled { 
             background-color: #94a3b8; 
             cursor: not-allowed; 
+        }
+
+        /* Texto que indica en qué piso estamos */
+        .indicador-piso {
+            font-weight: bold;
+            color: #333;
+            font-size: 16px;
+            min-width: 60px;
+            text-align: center;
         }
     </style>
 </head>
@@ -73,33 +98,89 @@
     <!-- Iframe del Primer Piso -->
     <iframe id="piso1" class="iframe-container" src="https://floorplanner.com/360vr/164841859-1789046186" allowfullscreen></iframe>
     
-    <!-- Iframe del Segundo Piso (Actualizado con tu nuevo link) -->
+    <!-- Iframe del Segundo Piso -->
     <iframe id="piso2" class="iframe-container" src="https://floorplanner.com/360vr/164936533-1789136063" allowfullscreen></iframe>
 
-    <!-- Panel de Botones -->
+    <!-- Iframe del Tercer Piso (Espacio en blanco listo para el link) -->
+    <iframe id="piso3" class="iframe-container" src="" allowfullscreen></iframe>
+
+    <!-- Panel de Botones (Flechas y Texto) -->
     <div class="controles">
-        <button id="btn-bajar" disabled onclick="cambiarPiso(1)">Piso 1</button>
-        <button id="btn-subir" onclick="cambiarPiso(2)">Piso 2</button>
+        <button id="btn-subir" onclick="cambiarPiso(pisoActual + 1)">▲</button>
+        <div class="indicador-piso" id="texto-piso">Piso 1</div>
+        <button id="btn-bajar" onclick="cambiarPiso(pisoActual - 1)" disabled>▼</button>
     </div>
 
     <script>
-        function cambiarPiso(piso) {
-            const iframe1 = document.getElementById('piso1');
-            const iframe2 = document.getElementById('piso2');
-            const btnBajar = document.getElementById('btn-bajar');
-            const btnSubir = document.getElementById('btn-subir');
+        let pisoActual = 1;
+        const totalPisos = 3;
+        let enTransicion = false; // Variable para controlar la velocidad del scroll
 
-            if (piso === 1) {
-                iframe1.style.display = 'block';
-                iframe2.style.display = 'none';
-                btnBajar.disabled = true;
-                btnSubir.disabled = false;
-            } else {
-                iframe1.style.display = 'none';
-                iframe2.style.display = 'block';
-                btnBajar.disabled = false;
-                btnSubir.disabled = true;
+        // Función principal para cambiar la vista
+        function cambiarPiso(nuevoPiso) {
+            // Evitar salir de los límites (menos de 1 o más de 3)
+            if (nuevoPiso < 1 || nuevoPiso > totalPisos) return;
+            
+            // 1. Ocultar todos los pisos
+            for (let i = 1; i <= totalPisos; i++) {
+                document.getElementById('piso' + i).style.display = 'none';
             }
+            
+            // 2. Mostrar el piso solicitado
+            document.getElementById('piso' + nuevoPiso).style.display = 'block';
+            
+            // 3. Actualizar la variable y el texto visual
+            pisoActual = nuevoPiso;
+            document.getElementById('texto-piso').innerText = 'Piso ' + pisoActual;
+            
+            // 4. Activar o desactivar botones según los límites
+            document.getElementById('btn-bajar').disabled = (pisoActual === 1);
+            document.getElementById('btn-subir').disabled = (pisoActual === totalPisos);
+        }
+
+        // --- SISTEMA DE NAVEGACIÓN CON SCROLL (PC) ---
+        window.addEventListener('wheel', function(e) {
+            if (enTransicion) return; // Si acaba de cambiar, ignora el scroll un momento
+            
+            if (e.deltaY < 0) {
+                cambiarPiso(pisoActual + 1); // Rueda hacia arriba -> Sube escala
+            } else if (e.deltaY > 0) {
+                cambiarPiso(pisoActual - 1); // Rueda hacia abajo -> Baja escala
+            }
+            
+            activarPausa();
+        });
+
+        // --- SISTEMA DE NAVEGACIÓN TÁCTIL (Celular) ---
+        let touchStartY = 0;
+        let touchEndY = 0;
+
+        window.addEventListener('touchstart', function(e) {
+            touchStartY = e.changedTouches[0].screenY;
+        });
+
+        window.addEventListener('touchend', function(e) {
+            if (enTransicion) return;
+            touchEndY = e.changedTouches[0].screenY;
+            
+            const distancia = touchStartY - touchEndY;
+            const umbral = 60; // Píxeles de arrastre necesarios para que cuente como gesto
+
+            if (distancia > umbral) {
+                cambiarPiso(pisoActual + 1); // Deslizar dedo hacia arriba
+                activarPausa();
+            } else if (distancia < -umbral) {
+                cambiarPiso(pisoActual - 1); // Deslizar dedo hacia abajo
+                activarPausa();
+            }
+        });
+
+        // Función para evitar múltiples cambios de piso por un solo movimiento largo
+        function activarPausa() {
+            enTransicion = true;
+            setTimeout(function() {
+                enTransicion = false;
+            }, 800); // Bloqueado durante 0.8 segundos
         }
     </script>
 </body>
